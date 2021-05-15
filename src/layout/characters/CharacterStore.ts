@@ -12,9 +12,13 @@ class CharacterStore {
 
   characters: Array<Character> = [];
 
-  @observable diplayedCharacters: Array<CharacterDisplay> = [];
+  @observable displayedCharacters: Array<CharacterDisplay> = [];
 
   @observable isLoading = false;
+
+  cultureFilter = "";
+
+  genderFilter = "";
 
   columns = [
     {
@@ -58,6 +62,14 @@ class CharacterStore {
     restOptions.headers = {
       "Content-Type": "application/json",
     };
+
+    if (this.genderFilter !== "") {
+      restOptions.params.set("gender", this.genderFilter);
+    }
+    if (this.cultureFilter !== "") {
+      restOptions.params.set("culture", this.cultureFilter);
+    }
+
     this.restService.fetch(
       url,
       restOptions,
@@ -69,11 +81,12 @@ class CharacterStore {
   private handleInitResponse = (apiResponse: any): void => {
     runInAction(() => {
       this.characters = [...apiResponse];
+      this.displayedCharacters = [];
       console.log(this.characters);
       this.characters.forEach((character: Character) => {
-        this.diplayedCharacters.push(new CharacterDisplay(character));
+        this.displayedCharacters.push(new CharacterDisplay(character));
       });
-      console.log(this.diplayedCharacters);
+      console.log(this.displayedCharacters);
       this.isLoading = false;
     });
   };
@@ -83,6 +96,22 @@ class CharacterStore {
       this.isLoading = false;
       alert("Error fetching characters");
     });
+  };
+
+  @action
+  filterByCulture = (input: string): void => {
+    this.cultureFilter = input;
+    this.initPage();
+  };
+
+  @action
+  filterByGender = (input: string): void => {
+    if (input === "all") {
+      this.genderFilter = "";
+    } else {
+      this.genderFilter = input;
+    }
+    this.initPage();
   };
 }
 
