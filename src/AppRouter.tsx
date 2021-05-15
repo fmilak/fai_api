@@ -2,8 +2,8 @@ import { Layout } from "antd";
 import { createBrowserHistory } from "history";
 import React from "react";
 import { Route, Router, Switch } from "react-router-dom";
-import CharacterView from "./characters/CharacterView";
-import HouseView from "./houses/HouseView";
+import CharacterView from "./layout/characters/CharacterView";
+import HouseView from "./layout/houses/HouseView";
 
 const { Content } = Layout;
 

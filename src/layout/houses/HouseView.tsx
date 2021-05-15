@@ -1,8 +1,9 @@
 import { observer } from "mobx-react";
+import React from "react";
 import { ReactElement } from "react";
 
-const CharacterView = observer((): ReactElement => {
+const HouseView = observer((): ReactElement => {
   return <div></div>;
 });
 
-export default CharacterView;
+export default HouseView;
