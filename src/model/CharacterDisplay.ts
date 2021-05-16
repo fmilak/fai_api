@@ -25,14 +25,14 @@ class CharacterDisplay {
       return "Yes";
     }
     const tod = died.match(/\d/g)?.join("");
-    const tob = born.match(/\d/g)?.join(""); // todo -> can be more than 1 year
+    const tob = born.match(/\d/g)?.join(""); // todo -> can be more than 1 year in a string? -> if yes then this alghoritm should be more complex
     let age: any;
     if (tod && tob) {
       age = toNumber(tod) - toNumber(tob);
     } else {
       age = "Unknown";
     }
-    return `No, died at ${age} years old`; // todo -> test
+    return `No, died at ${age} years old`;
   };
 
   private getAllegiancesAttr = (allegiances: Array<string>): Array<any> => {

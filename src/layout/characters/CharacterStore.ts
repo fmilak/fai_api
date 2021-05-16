@@ -66,16 +66,19 @@ class CharacterStore {
   ): void => {
     if (!isNil(responseLink)) {
       this.paginationLinks = responseLink;
-      console.log(this.paginationLinks);
+      if (this.paginationLinks.first.page === this.paginationLinks.last.page) {
+        runInAction(() => {
+          this.onFirstPage = true;
+          this.onLastPage = true;
+        });
+      }
     }
     runInAction(() => {
       this.characters = [...apiResponse];
       this.displayedCharacters = [];
-      console.log(this.characters);
       this.characters.forEach((character: Character) => {
         this.displayedCharacters.push(new CharacterDisplay(character));
       });
-      console.log(this.displayedCharacters);
       this.isLoading = false;
     });
   };
@@ -90,6 +93,10 @@ class CharacterStore {
   @action
   filterByCulture = (input: string): void => {
     this.cultureFilter = input;
+    this.currentPage = 1;
+    runInAction(() => {
+      this.onFirstPage = true;
+    });
     this.initPage();
   };
 
@@ -100,6 +107,10 @@ class CharacterStore {
     } else {
       this.genderFilter = input;
     }
+    this.currentPage = 1;
+    runInAction(() => {
+      this.onFirstPage = true;
+    });
     this.initPage();
   };
 
@@ -108,6 +119,7 @@ class CharacterStore {
     this.currentPage = 1;
     runInAction(() => {
       this.onFirstPage = true;
+      this.onLastPage = false;
     });
     this.initPage();
   };
@@ -158,7 +170,8 @@ class CharacterStore {
           this.onFirstPage = false;
           break;
         default:
-          break; // todo -> alert that something went wrong
+          alert("Something went wrong during changing the page");
+          break;
       }
     });
 
