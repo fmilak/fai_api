@@ -1,12 +1,11 @@
 import { isNil } from "lodash";
 import RestOptions from "../model/RestOptions";
+import parse, { Link, Links } from "parse-link-header";
 
 /**
  * Main service for REST requests
  */
 class RestService {
-  private MAIN_URL = "https://www.anapioficeandfire.com/api";
-
   /**
    * Main fetch method
    * @param path -> url exstension
@@ -19,8 +18,7 @@ class RestService {
     callback: Function,
     failCallback?: Function
   ): Promise<void> => {
-    const url =
-      this.MAIN_URL + RestService.handleUrlParams(path, restOptions.params);
+    const url = RestService.handleUrlParams(path, restOptions.params);
     try {
       const requestInit: RequestInit = {
         method: restOptions.method,
@@ -29,8 +27,12 @@ class RestService {
       };
 
       const response = await fetch(url, requestInit);
-      const responseJson = await this.handleApiResponse(response);
-      this.handleApiResponseJson(responseJson, callback);
+      const responseObject = await this.handleApiResponse(response);
+      this.handleApiResponseJson(
+        responseObject.responseJson,
+        callback,
+        responseObject.parsedLink
+      );
     } catch (err) {
       console.log(err);
       if (failCallback) {
@@ -43,7 +45,12 @@ class RestService {
    * Handles initial response from backend API
    * @param response - from API
    */
-  private handleApiResponse = (response: Response): Promise<any> => {
+  private handleApiResponse = async (response: Response): Promise<any> => {
+    const responseLink = response.headers.get("Link");
+    let parsedLink = undefined;
+    if (!isNil(responseLink)) {
+      parsedLink = parse(responseLink);
+    }
     const stringifiedResponse = JSON.stringify(response);
     console.log(`Response -> ${stringifiedResponse}`);
     if (response.status === 404) {
@@ -55,7 +62,8 @@ class RestService {
     if (response.status >= 500 && response.status <= 600) {
       throw new Error(`Server returned ${response.status}`);
     }
-    return response.json();
+    const responseJson = await response.json();
+    return { responseJson, parsedLink };
   };
 
   /**
@@ -67,13 +75,15 @@ class RestService {
    */
   private handleApiResponseJson = (
     responseJson: string,
-    callback: Function
+    callback: Function,
+    responseLink?: Links
   ): void => {
+    // todo -> see if no responselInk
     const stringifiedResponse = JSON.stringify(responseJson);
     console.log(`Response JSON -> ${stringifiedResponse}`);
     const response: any = JSON.parse(stringifiedResponse);
 
-    callback(response);
+    callback(response, responseLink);
   };
 
   /**
@@ -83,7 +93,7 @@ class RestService {
    */
   private static handleUrlParams(
     path: string,
-    params?: Map<string, any>
+    params: Map<string, any>
   ): string {
     if (isNil(params) || params.size === 0) {
       return path;
@@ -102,6 +112,51 @@ class RestService {
 
     return newPath;
   }
+
+  fetchByLink = async (
+    path: string,
+    restOptions: RestOptions,
+    callback: Function,
+    failCallback?: Function
+  ): Promise<void> => {
+    const url = RestService.addToExistingParams(path, restOptions.params);
+    try {
+      const requestInit: RequestInit = {
+        method: restOptions.method,
+        headers: restOptions.headers,
+        body: restOptions.body,
+      };
+
+      const response = await fetch(url, requestInit);
+      const responseObject = await this.handleApiResponse(response);
+      this.handleApiResponseJson(
+        responseObject.responseJson,
+        callback,
+        responseObject.parsedLink
+      );
+    } catch (err) {
+      console.log(err);
+      if (failCallback) {
+        failCallback();
+      }
+    }
+  };
+
+  private static addToExistingParams = (
+    path: string,
+    params: Map<string, any>
+  ): string => {
+    if (isNil(params) || params.size === 0) {
+      return path;
+    }
+    let newPath = path;
+    params.forEach((value, key) => {
+      newPath = newPath.concat(value.toString()).concat("&");
+    });
+    newPath = newPath.substring(0, newPath.length - 1);
+
+    return newPath;
+  };
 }
 
 export default RestService;

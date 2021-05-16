@@ -1,3 +1,4 @@
+import { toNumber } from "lodash";
 import Character from "./Character";
 
 class CharacterDisplay {
@@ -23,7 +24,15 @@ class CharacterDisplay {
     if (died === "") {
       return "Yes";
     }
-    return "No"; // todo -> no return
+    const tod = died.match(/\d/g)?.join("");
+    const tob = born.match(/\d/g)?.join(""); // todo -> can be more than 1 year
+    let age: any;
+    if (tod && tob) {
+      age = toNumber(tod) - toNumber(tob);
+    } else {
+      age = "Unknown";
+    }
+    return `No, died at ${age} years old`; // todo -> test
   };
 
   private getAllegiancesAttr = (allegiances: Array<string>): Array<any> => {

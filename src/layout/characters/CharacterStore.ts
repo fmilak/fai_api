@@ -1,5 +1,6 @@
-import { toUpper } from "lodash";
+import { isNil, toNumber } from "lodash";
 import { action, observable, runInAction } from "mobx";
+import { Link, Links } from "parse-link-header";
 import Character from "../../model/Character";
 import CharacterDisplay from "../../model/CharacterDisplay";
 import RestOptions from "../../model/RestOptions";
@@ -16,9 +17,19 @@ class CharacterStore {
 
   @observable isLoading = false;
 
+  @observable onFirstPage = true;
+
+  @observable onLastPage = false;
+
+  paginationLinks: Links = {};
+
   cultureFilter = "";
 
-  genderFilter = "";
+  genderFilter = "all";
+
+  pageSize = 10;
+
+  currentPage = 1;
 
   columns = [
     {
@@ -57,13 +68,17 @@ class CharacterStore {
   initPage = (): void => {
     this.isLoading = true;
     const restOptions: RestOptions = new RestOptions();
-    const url = `/characters`;
+    const url = `https://www.anapioficeandfire.com/api/characters`;
     restOptions.method = "GET";
     restOptions.headers = {
       "Content-Type": "application/json",
     };
 
-    if (this.genderFilter !== "") {
+    restOptions.params.set("page", this.currentPage);
+    restOptions.params.set("pageSize", this.pageSize);
+
+    if (this.genderFilter !== "all") {
+      // todo -> not sure if you can filter by undefined gender
       restOptions.params.set("gender", this.genderFilter);
     }
     if (this.cultureFilter !== "") {
@@ -78,7 +93,14 @@ class CharacterStore {
     );
   };
 
-  private handleInitResponse = (apiResponse: any): void => {
+  private handleInitResponse = (
+    apiResponse: any,
+    responseLink?: Links
+  ): void => {
+    if (!isNil(responseLink)) {
+      this.paginationLinks = responseLink;
+      console.log(this.paginationLinks);
+    }
     runInAction(() => {
       this.characters = [...apiResponse];
       this.displayedCharacters = [];
@@ -106,12 +128,77 @@ class CharacterStore {
 
   @action
   filterByGender = (input: string): void => {
-    if (input === "all") {
+    if (input === "unknown") {
       this.genderFilter = "";
     } else {
       this.genderFilter = input;
     }
     this.initPage();
+  };
+
+  changePageSize = (input: string): void => {
+    this.pageSize = toNumber(input);
+    this.initPage();
+  };
+
+  changePage = (option: string): void => {
+    let url = "";
+    runInAction(() => {
+      this.isLoading = true;
+      switch (option) {
+        case "first":
+          url = this.paginationLinks.first.url;
+          this.onFirstPage = true;
+          this.onLastPage = false;
+          break;
+        case "previous":
+          url = this.paginationLinks.prev.url;
+          if (
+            this.paginationLinks.prev.page === this.paginationLinks.first.page
+          ) {
+            this.onFirstPage = true;
+          }
+          this.onLastPage = false;
+          break;
+        case "next":
+          url = this.paginationLinks.next.url;
+          if (
+            this.paginationLinks.next.page === this.paginationLinks.last.page
+          ) {
+            this.onLastPage = true;
+          }
+          this.onFirstPage = false;
+          break;
+        case "last":
+          url = this.paginationLinks.last.url;
+          this.onLastPage = true;
+          this.onFirstPage = false;
+          break;
+        default:
+          break; // todo -> alert that something went wrong
+      }
+    });
+
+    const restOptions: RestOptions = new RestOptions();
+    restOptions.method = "GET";
+    restOptions.headers = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.genderFilter !== "all") {
+      // todo -> not sure if you can filter by undefined gender
+      restOptions.params.set("gender", this.genderFilter);
+    }
+    if (this.cultureFilter !== "") {
+      restOptions.params.set("culture", this.cultureFilter);
+    }
+
+    this.restService.fetchByLink(
+      url,
+      restOptions,
+      this.handleInitResponse,
+      this.handleInitFail
+    );
   };
 }
 
