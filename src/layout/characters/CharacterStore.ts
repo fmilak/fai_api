@@ -138,6 +138,10 @@ class CharacterStore {
 
   changePageSize = (input: string): void => {
     this.pageSize = toNumber(input);
+    this.currentPage = 1;
+    runInAction(() => {
+      this.onFirstPage = true;
+    });
     this.initPage();
   };
 
@@ -147,11 +151,17 @@ class CharacterStore {
       this.isLoading = true;
       switch (option) {
         case "first":
+          if (!this.paginationLinks.first) {
+            break; // todo -> handle this better
+          }
           url = this.paginationLinks.first.url;
           this.onFirstPage = true;
           this.onLastPage = false;
           break;
         case "previous":
+          if (!this.paginationLinks.prev) {
+            break;
+          }
           url = this.paginationLinks.prev.url;
           if (
             this.paginationLinks.prev.page === this.paginationLinks.first.page
@@ -161,6 +171,9 @@ class CharacterStore {
           this.onLastPage = false;
           break;
         case "next":
+          if (!this.paginationLinks.next) {
+            break;
+          }
           url = this.paginationLinks.next.url;
           if (
             this.paginationLinks.next.page === this.paginationLinks.last.page
@@ -170,6 +183,9 @@ class CharacterStore {
           this.onFirstPage = false;
           break;
         case "last":
+          if (!this.paginationLinks.last) {
+            break;
+          }
           url = this.paginationLinks.last.url;
           this.onLastPage = true;
           this.onFirstPage = false;
