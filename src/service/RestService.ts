@@ -1,6 +1,6 @@
 import { isNil } from "lodash";
 import RestOptions from "../model/RestOptions";
-import parse, { Link, Links } from "parse-link-header";
+import parse, { Links } from "parse-link-header";
 
 /**
  * Main service for REST requests
@@ -78,7 +78,6 @@ class RestService {
     callback: Function,
     responseLink?: Links
   ): void => {
-    // todo -> see if no responselInk
     const stringifiedResponse = JSON.stringify(responseJson);
     console.log(`Response JSON -> ${stringifiedResponse}`);
     const response: any = JSON.parse(stringifiedResponse);

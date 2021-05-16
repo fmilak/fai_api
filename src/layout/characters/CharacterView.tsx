@@ -84,24 +84,75 @@ const TableFilters = observer(({ store }: { store: CharacterStore }) => {
   );
 });
 
-const CharacterTable = observer(({ store }: { store: CharacterStore }) => {
-  return (
-    <div style={{ overflow: "auto" }}>
-      <Table
-        dataSource={store.displayedCharacters.slice()}
-        columns={store.columns}
-        loading={store.isLoading}
-        pagination={false}
-      />
-    </div>
-  );
-});
+const CharacterTable = observer(
+  ({ store, columns }: { store: CharacterStore; columns: Array<any> }) => {
+    return (
+      <div style={{ overflow: "auto" }}>
+        <Table
+          dataSource={store.displayedCharacters.slice()}
+          columns={columns}
+          loading={store.isLoading}
+          pagination={false}
+        />
+      </div>
+    );
+  }
+);
 
 const CharacterView: React.FC = observer(() => {
   const { characterStore, restService } = useContext(RootStoreContext);
   const history = useHistory();
   characterStore.history = history;
   characterStore.restService = restService;
+
+  const columns = [
+    {
+      title: "Character",
+      dataIndex: "character",
+      key: "character",
+    },
+    {
+      title: "Alive",
+      dataIndex: "alive",
+      key: "alive",
+    },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      key: "gender",
+    },
+    {
+      title: "Culture",
+      dataIndex: "culture",
+      key: "culture",
+    },
+    {
+      title: "Allegiances",
+      dataIndex: "allegiances",
+      key: "allegiances",
+      render: (allegiances: Array<string>) => (
+        <span>
+          {allegiances.map((allegiance: any) => {
+            return (
+              <Button
+                type="link"
+                onClick={() => {
+                  characterStore.navigateToHouse(allegiance);
+                }}
+              >
+                {allegiance}
+              </Button>
+            );
+          })}
+        </span>
+      ),
+    },
+    {
+      title: "# of books",
+      dataIndex: "numberOfBooks",
+      key: "numberOfBooks",
+    },
+  ];
 
   useEffect(() => {
     characterStore.initPage();
@@ -113,7 +164,7 @@ const CharacterView: React.FC = observer(() => {
 
       <Content style={{ height: "80%", padding: "2%" }}>
         <TableFilters store={characterStore} />
-        <CharacterTable store={characterStore} />
+        <CharacterTable store={characterStore} columns={columns} />
       </Content>
     </Layout>
   );

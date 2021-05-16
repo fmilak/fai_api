@@ -1,6 +1,6 @@
 import { isNil, toNumber } from "lodash";
 import { action, observable, runInAction } from "mobx";
-import { Link, Links } from "parse-link-header";
+import { Links } from "parse-link-header";
 import Character from "../../model/Character";
 import CharacterDisplay from "../../model/CharacterDisplay";
 import RestOptions from "../../model/RestOptions";
@@ -30,39 +30,6 @@ class CharacterStore {
   pageSize = 10;
 
   currentPage = 1;
-
-  columns = [
-    {
-      title: "Character",
-      dataIndex: "character",
-      key: "character",
-    },
-    {
-      title: "Alive",
-      dataIndex: "alive",
-      key: "alive",
-    },
-    {
-      title: "Gender",
-      dataIndex: "gender",
-      key: "gender",
-    },
-    {
-      title: "Culture",
-      dataIndex: "culture",
-      key: "culture",
-    },
-    {
-      title: "Allegiances",
-      dataIndex: "allegiances",
-      key: "allegiances",
-    },
-    {
-      title: "# of books",
-      dataIndex: "numberOfBooks",
-      key: "numberOfBooks",
-    },
-  ];
 
   @action
   initPage = (): void => {
@@ -215,6 +182,10 @@ class CharacterStore {
       this.handleInitResponse,
       this.handleInitFail
     );
+  };
+
+  navigateToHouse = (value: string): void => {
+    this.history.push(`/house/${value}`);
   };
 }
 
